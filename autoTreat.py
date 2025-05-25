@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 # === 配置区域 ===
-ADB_PORTS = [16512]
+ADB_PORTS = [16384]
 
-X, Y = 1550, 2800
+X, Y = 650, 1150
 OFFSET_RANGE = 50
 SHORT_INTERVAL_SECONDS = 0.5  # 两次点击之间的短暂间隔
 LONG_INTERVAL_SECONDS = 2.0   # 每轮点击后的长暂停
-DURATION_SECONDS = 3000
+DURATION_SECONDS = 300  # 设置为 300 秒以便调试
 # =================
 
 def run_adb_click(port: int):
@@ -20,10 +20,13 @@ def run_adb_click(port: int):
     target_x = X + offset_x
     target_y = Y + offset_y
 
-    cmd = f'adb -s 127.0.0.1:{port} shell input tap {target_x} {target_y}'
-    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print(f"[{port}] Tap at ({target_x}, {target_y})")
+    adb_path = r'C:\Program Files\Netease\MuMu Player 12\shell\adb'  # 确保这是 ADB 的正确路径
+    cmd = f'"{adb_path}" -s 127.0.0.1:{port} shell input tap {target_x} {target_y}'  # 使用完整路径
 
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(f"[{port}] Tap at ({target_x}, {target_y})")
+    print(result.stdout.decode(errors='ignore'))  # 使用 'ignore' 来处理编码问题
+    print(result.stderr.decode(errors='ignore'))
 def main():
     end_time = datetime.now() + timedelta(seconds=DURATION_SECONDS)
     print(f"启动点击任务，第一个点击后间隔 {SHORT_INTERVAL_SECONDS} 秒，再点击一次，然后间隔 {LONG_INTERVAL_SECONDS} 秒，持续 {DURATION_SECONDS} 秒")
